@@ -8,6 +8,7 @@ use App\Domain\Gifs\CatalogUnavailable;
 use App\Domain\Gifs\GifNotFound;
 use App\Domain\Gifs\InvalidCatalogResponse;
 use App\Infrastructure\Audit\HttpInteractionCapture;
+use App\Infrastructure\Console\InitializeApplication;
 use App\Infrastructure\Http\ApiErrors;
 use App\Infrastructure\Http\AuditHttp;
 use App\Infrastructure\Http\ExplicitTrustProxies;
@@ -17,6 +18,7 @@ use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Middleware\TrustProxies;
 
 return Application::configure(basePath: dirname(__DIR__))
+    ->withCommands([InitializeApplication::class])
     ->withRouting(
         api: __DIR__.'/../routes/api.php',
         commands: __DIR__.'/../routes/console.php',

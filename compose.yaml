@@ -1,18 +1,30 @@
+x-app: &app
+  image: ${COMPOSE_PROJECT_NAME:-prexchallenge}-app
+  build:
+    context: .
+    args:
+      APP_UID: ${APP_UID:-1000}
+      APP_GID: ${APP_GID:-1000}
+  volumes:
+    - .:/var/www/html
+  networks:
+    - backend
+    - outbound
+
 services:
-  app:
-    build:
-      context: .
-      args:
-        APP_UID: ${APP_UID:-1000}
-        APP_GID: ${APP_GID:-1000}
-    volumes:
-      - .:/var/www/html
+  init:
+    <<: *app
+    command: ["sh", "scripts/docker-init.sh"]
+    restart: "no"
     depends_on:
       mysql:
         condition: service_healthy
-    networks:
-      - backend
-      - outbound
+
+  app:
+    <<: *app
+    depends_on:
+      init:
+        condition: service_completed_successfully
 
   nginx:
     image: nginx:1.30.5-alpine@sha256:0985e772fb9f729e6fa0980da05fca5d9c468e870eed43071545afa9d2e27d94
@@ -23,6 +35,12 @@ services:
       - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
     depends_on:
       - app
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1/up"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 10s
     networks:
       - backend
       - outbound
@@ -34,8 +52,8 @@ services:
     environment:
       MYSQL_DATABASE: ${DB_DATABASE:-prex}
       MYSQL_USER: ${DB_USERNAME:-prex_app}
-      MYSQL_PASSWORD: ${DB_PASSWORD:?Generate DB_PASSWORD in .env first}
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Generate MYSQL_ROOT_PASSWORD in .env first}
+      MYSQL_PASSWORD: ${DB_PASSWORD:?Complete DB_PASSWORD in .env first}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Complete MYSQL_ROOT_PASSWORD in .env first}
     volumes:
       - mysql_data:/var/lib/mysql
     healthcheck:

@@ -1,10 +1,15 @@
 # Separate project/network/volume: never run this override against the main project.
 services:
+  init:
+    profiles: ["initialization"]
   mysql:
     ports: !reset []
     environment:
       MYSQL_DATABASE: prex_audit_test
   app:
+    depends_on: !override
+      mysql:
+        condition: service_healthy
     environment:
       APP_ENV: testing
       DB_CONNECTION: mysql
