@@ -1,0 +1,11 @@
+# Separate project/network/volume: never run this override against the main project.
+services:
+  mysql:
+    ports: !reset []
+    environment:
+      MYSQL_DATABASE: prex_audit_test
+  app:
+    environment:
+      APP_ENV: testing
+      DB_CONNECTION: mysql
+      DB_DATABASE: prex_audit_test
